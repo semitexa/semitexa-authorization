@@ -1,0 +1,121 @@
+<?php
+
+declare(strict_types=1);
+
+namespace Semitexa\Authorization\Pipeline;
+
+use Semitexa\Auth\AuthBootstrapper;
+use Semitexa\Auth\AuthenticationMode;
+use Semitexa\Auth\Context\AuthManager;
+use Semitexa\Authorization\Authorizer\AuthorizerInterface;
+use Semitexa\Authorization\Decision\DenyReason;
+use Semitexa\Authorization\Event\AuthorizationDenied;
+use Semitexa\Authorization\Policy\PayloadAccessPolicyResolver;
+use Semitexa\Authorization\Subject\AuthenticatedSubject;
+use Semitexa\Authorization\Subject\GuestSubject;
+use Semitexa\Core\Attributes\AsPipelineListener;
+use Semitexa\Core\Attributes\InjectAsReadonly;
+use Semitexa\Core\Event\EventDispatcherInterface;
+use Semitexa\Core\Pipeline\AuthCheck;
+use Semitexa\Core\Pipeline\Exception\AccessDeniedException;
+use Semitexa\Core\Pipeline\Exception\AuthenticationRequiredException;
+use Semitexa\Core\Pipeline\PipelineListenerInterface;
+use Semitexa\Core\Pipeline\RequestPipelineContext;
+
+/**
+ * Single enforcement point for the authorization policy model.
+ *
+ * Responsibilities (orchestration only — no policy semantics inline):
+ *   1. Resolve payload access policy.
+ *   2. Validate policy metadata (boot-time invariant, fails loudly on bad combos).
+ *   3. Invoke AuthBootstrapper in the appropriate mode (Mandatory or BestEffort).
+ *   4. Evaluate the resolved subject against the access policy.
+ *   5. Emit AuthorizationDenied event on denial (observational only).
+ *   6. Map the decision to continuation, AuthenticationRequiredException, or AccessDeniedException.
+ */
+#[AsPipelineListener(phase: AuthCheck::class, priority: 0)]
+final class AuthorizationListener implements PipelineListenerInterface
+{
+    #[InjectAsReadonly]
+    protected ?AuthorizerInterface $authorizer = null;
+
+    #[InjectAsReadonly]
+    protected ?EventDispatcherInterface $events = null;
+
+    public function handle(RequestPipelineContext $context): void
+    {
+        $resolver = new PayloadAccessPolicyResolver();
+
+        // Validate metadata — fails loudly on contradictory attribute combinations.
+        // This is a boot-time invariant enforced on the first request per payload class.
+        $resolver->assertValidMetadata($context->requestDto);
+
+        $policy = new \Semitexa\Authorization\Policy\AccessPolicy(
+            isPublic: $resolver->isPublic($context->requestDto),
+            requiredCapabilities: $resolver->requiredCapabilities($context->requestDto),
+            requiredPermissions: $resolver->requiredPermissions($context->requestDto),
+        );
+
+        $authBootstrapper = $context->authBootstrapper instanceof AuthBootstrapper
+            ? $context->authBootstrapper
+            : null;
+
+        if ($authBootstrapper !== null && $authBootstrapper->isEnabled()) {
+            $mode = $policy->isPublic
+                ? AuthenticationMode::BestEffort
+                : AuthenticationMode::Mandatory;
+
+            $authBootstrapper->handle($context->requestDto, $mode);
+            $context->authResult = AuthManager::getInstance()->getLastResult();
+        }
+
+        $authManager = AuthManager::getInstance();
+        $subject = $authManager->isGuest()
+            ? new GuestSubject()
+            : new AuthenticatedSubject($authManager->getUser()?->getId() ?? '');
+
+        if ($this->authorizer === null) {
+            // No authorizer registered — fall back to simple public/protected check.
+            if (!$policy->isPublic && $subject->isGuest()) {
+                throw new AuthenticationRequiredException('Authentication required');
+            }
+            return;
+        }
+
+        $decision = $this->authorizer->authorize($subject, $policy);
+
+        if ($decision->allowed) {
+            return;
+        }
+
+        $this->emitDenied($decision, $context, $subject->getIdentifier());
+
+        if ($decision->denyReason === DenyReason::AuthenticationRequired) {
+            throw new AuthenticationRequiredException($decision->message);
+        }
+
+        throw new AccessDeniedException($decision->message);
+    }
+
+    private function emitDenied(
+        \Semitexa\Authorization\Decision\AccessDecision $decision,
+        RequestPipelineContext $context,
+        ?string $userId,
+    ): void {
+        if ($this->events === null) {
+            return;
+        }
+
+        try {
+            $this->events->dispatch(new AuthorizationDenied(
+                decision: $decision,
+                payloadClass: $context->requestDto::class,
+                routePath: $context->request->getUri(),
+                userId: $userId,
+                requestId: null,
+            ));
+        } catch (\Throwable) {
+            // Audit failure must never suppress the denial response.
+        }
+    }
+}
