@@ -1,7 +1,7 @@
 {
     "name": "semitexa/authorization",
     "description": "Authorization policy module for Semitexa Framework",
-    "version": "v1.0.0",
+    "version": "1.0.2",
     "type": "semitexa-module",
     "license": "MIT",
     "require": {
