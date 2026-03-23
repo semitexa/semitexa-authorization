@@ -18,5 +18,13 @@
         "semitexa-module": {
             "extends": null
         }
-    }
+    },
+    "keywords": [
+        "semitexa",
+        "authorization",
+        "authentication",
+        "sessions",
+        "policies",
+        "permissions"
+    ]
 }
