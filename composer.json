@@ -1,6 +1,6 @@
 {
     "name": "semitexa/authorization",
-    "description": "Authorization policy module for Semitexa Framework",
+    "description": "Semitexa Authorization - policy-based access checks, guards, and permission evaluation",
     "version": "1.0.2",
     "type": "semitexa-module",
     "license": "MIT",
@@ -18,5 +18,13 @@
         "semitexa-module": {
             "extends": null
         }
-    }
+    },
+    "keywords": [
+        "semitexa",
+        "authorization",
+        "policies",
+        "permissions",
+        "guards",
+        "access-control"
+    ]
 }
