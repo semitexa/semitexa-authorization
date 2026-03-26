@@ -8,7 +8,7 @@ Evaluates access policies on every guarded request. Resolves merged policies fro
 
 ## Role in Semitexa
 
-Depends on `semitexa/core` and `semitexa/auth`. Depended on by `semitexa/rbac` and platform packages. Provides the enforcement layer that RBAC and other grant resolvers plug into.
+Depends on `semitexa/core` and `semitexa/auth`. Used by `semitexa/rbac` and platform packages. Provides the enforcement layer that RBAC and other grant resolvers plug into.
 
 ## Key Features
 
@@ -16,8 +16,8 @@ Depends on `semitexa/core` and `semitexa/auth`. Depended on by `semitexa/rbac` a
 - `PayloadAccessPolicyResolver` merging policies from class hierarchy
 - `AuthorizationListener` guarding handler execution with 403 on failure
 - `AuthenticatedSubject` and `GuestSubject` types
-- Extensible via `GrantResolverInterface` (implemented by RBAC)
+- Extensible via `SubjectGrantResolverInterface` (implemented by RBAC)
 
 ## Notes
 
-Authorization depends on a `GrantResolverInterface` to check grants. Without RBAC or a custom implementation, all capability and permission checks fail closed.
+Authorization uses a `SubjectGrantResolverInterface` to resolve the authenticated subject's grants when an `Authorizer` is registered. If no `SubjectGrantResolverInterface` is available, capability and permission requirements fail closed. If no `Authorizer` is registered at all, the pipeline falls back to public-vs-protected endpoint handling only and skips grant evaluation.
