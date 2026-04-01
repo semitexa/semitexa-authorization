@@ -1,7 +1,7 @@
 {
     "name": "semitexa/authorization",
     "description": "Semitexa Authorization - policy-based access checks, guards, and permission evaluation",
-    "version": "1.0.2",
+    "version": "v1.0.4",
     "type": "semitexa-module",
     "license": "MIT",
     "require": {
