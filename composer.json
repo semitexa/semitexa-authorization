@@ -1,30 +1,29 @@
 {
-    "name": "semitexa/authorization",
-    "description": "Semitexa Authorization - policy-based access checks, guards, and permission evaluation",
-    "version": "v1.0.4",
-    "type": "semitexa-module",
-    "license": "MIT",
-    "require": {
-        "php": "^8.4",
-        "semitexa/core": "^1.0",
-        "semitexa/auth": "^1.0"
-    },
-    "autoload": {
-        "psr-4": {
-            "Semitexa\\Authorization\\": "src/"
-        }
-    },
-    "extra": {
-        "semitexa-module": {
-            "extends": null
-        }
-    },
-    "keywords": [
-        "semitexa",
-        "authorization",
-        "policies",
-        "permissions",
-        "guards",
-        "access-control"
-    ]
+  "name": "semitexa/authorization",
+  "description": "Semitexa Authorization - policy-based access checks, guards, and permission evaluation",
+  "type": "semitexa-module",
+  "license": "MIT",
+  "require": {
+    "php": "^8.4",
+    "semitexa/core": "^1.0",
+    "semitexa/auth": "^1.0"
+  },
+  "autoload": {
+    "psr-4": {
+      "Semitexa\\Authorization\\": "src/"
+    }
+  },
+  "extra": {
+    "semitexa-module": {
+      "extends": null
+    }
+  },
+  "keywords": [
+    "semitexa",
+    "authorization",
+    "policies",
+    "permissions",
+    "guards",
+    "access-control"
+  ]
 }
