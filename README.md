@@ -1,4 +1,4 @@
-# semitexa/authorization
+# Semitexa Authorization
 
 Policy-based access control with capability and permission guards and payload-level enforcement.
 
