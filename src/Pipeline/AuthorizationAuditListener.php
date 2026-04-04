@@ -6,7 +6,7 @@ namespace Semitexa\Authorization\Pipeline;
 
 use Semitexa\Authorization\Decision\DenyReason;
 use Semitexa\Authorization\Event\AuthorizationDenied;
-use Semitexa\Core\Attributes\AsEventListener;
+use Semitexa\Core\Attribute\AsEventListener;
 
 /**
  * Observational listener for denied authorization attempts.

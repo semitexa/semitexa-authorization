@@ -7,8 +7,8 @@ namespace Semitexa\Authorization\Authorizer;
 use Semitexa\Authorization\Decision\AccessDecision;
 use Semitexa\Authorization\Decision\DenyReason;
 use Semitexa\Authorization\Policy\AccessPolicy;
-use Semitexa\Core\Attributes\InjectAsReadonly;
-use Semitexa\Core\Attributes\SatisfiesServiceContract;
+use Semitexa\Core\Attribute\InjectAsReadonly;
+use Semitexa\Core\Attribute\SatisfiesServiceContract;
 use Semitexa\Core\Authorization\SubjectInterface;
 
 #[SatisfiesServiceContract(of: AuthorizerInterface::class)]
