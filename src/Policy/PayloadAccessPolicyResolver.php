@@ -4,9 +4,9 @@ declare(strict_types=1);
 
 namespace Semitexa\Authorization\Policy;
 
-use Semitexa\Authorization\Attributes\PublicEndpoint;
-use Semitexa\Authorization\Attributes\RequiresCapability;
-use Semitexa\Authorization\Attributes\RequiresPermission;
+use Semitexa\Authorization\Attribute\PublicEndpoint;
+use Semitexa\Authorization\Attribute\RequiresCapability;
+use Semitexa\Authorization\Attribute\RequiresPermission;
 use Semitexa\Authorization\Capability\Capability;
 
 final class PayloadAccessPolicyResolver implements PayloadAccessPolicyResolverInterface
