@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace Semitexa\Authorization\Attributes;
+namespace Semitexa\Authorization\Attribute;
 
 use Attribute;
 
