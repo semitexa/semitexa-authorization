@@ -6,6 +6,9 @@ namespace Semitexa\Authorization\Pipeline;
 
 use Semitexa\Authorization\Event\AuthorizationDenied;
 use Semitexa\Core\Attribute\AsEventListener;
+use Semitexa\Core\Attribute\InjectAsReadonly;
+use Semitexa\Core\Log\FallbackErrorLogger;
+use Semitexa\Core\Log\LoggerInterface;
 
 /**
  * Observational listener for denied authorization attempts.
@@ -21,16 +24,31 @@ use Semitexa\Core\Attribute\AsEventListener;
 #[AsEventListener(event: AuthorizationDenied::class)]
 final class AuthorizationAuditListener
 {
+    #[InjectAsReadonly]
+    protected ?LoggerInterface $logger = null;
+
     public function handle(AuthorizationDenied $event): void
     {
-        $denialType = $event->decision->denyReason?->value ?? 'unknown';
+        $context = [
+            'payload' => $event->payloadClass,
+            'path' => $this->sanitizeRoutePath($event->routePath),
+            'reason' => $event->decision->denyReason?->value ?? 'unknown',
+            'user' => $event->userId ?? 'guest',
+            'request_id' => $event->requestId ?? 'n/a',
+        ];
 
-        error_log(sprintf(
-            '[authorization] denied payload=%s path=%s reason=%s user=%s',
-            $event->payloadClass,
-            $event->routePath,
-            $denialType,
-            $event->userId ?? 'guest',
-        ));
+        if ($this->logger !== null) {
+            $this->logger->notice('Authorization denied', $context);
+            return;
+        }
+
+        FallbackErrorLogger::log('Authorization denied', $context);
+    }
+
+    private function sanitizeRoutePath(string $routePath): string
+    {
+        $path = parse_url($routePath, PHP_URL_PATH);
+
+        return is_string($path) && $path !== '' ? $path : $routePath;
     }
 }
