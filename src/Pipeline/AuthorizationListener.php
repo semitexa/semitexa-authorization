@@ -4,9 +4,6 @@ declare(strict_types=1);
 
 namespace Semitexa\Authorization\Pipeline;
 
-use Semitexa\Auth\AuthBootstrapper;
-use Semitexa\Auth\AuthenticationMode;
-use Semitexa\Auth\Context\AuthManager;
 use Semitexa\Authorization\Authorizer\AuthorizerInterface;
 use Semitexa\Authorization\Decision\DenyReason;
 use Semitexa\Authorization\Event\AuthorizationDenied;
@@ -14,7 +11,11 @@ use Semitexa\Authorization\Policy\PayloadAccessPolicyResolver;
 use Semitexa\Authorization\Subject\AuthenticatedSubject;
 use Semitexa\Authorization\Subject\GuestSubject;
 use Semitexa\Core\Attribute\AsPipelineListener;
+use Semitexa\Core\Attribute\InjectAsMutable;
 use Semitexa\Core\Attribute\InjectAsReadonly;
+use Semitexa\Core\Auth\AuthBootstrapperInterface;
+use Semitexa\Core\Auth\AuthContextInterface;
+use Semitexa\Core\Auth\AuthenticationMode;
 use Semitexa\Core\Event\EventDispatcherInterface;
 use Semitexa\Core\Pipeline\AuthCheck;
 use Semitexa\Core\Pipeline\Exception\AccessDeniedException;
@@ -42,6 +43,9 @@ final class AuthorizationListener implements PipelineListenerInterface
     #[InjectAsReadonly]
     protected ?EventDispatcherInterface $events = null;
 
+    #[InjectAsMutable]
+    protected ?AuthContextInterface $authContext = null;
+
     public function handle(RequestPipelineContext $context): void
     {
         $resolver = new PayloadAccessPolicyResolver();
@@ -56,7 +60,7 @@ final class AuthorizationListener implements PipelineListenerInterface
             requiredPermissions: $resolver->requiredPermissions($context->requestDto),
         );
 
-        $authBootstrapper = $context->authBootstrapper instanceof AuthBootstrapper
+        $authBootstrapper = $context->authBootstrapper instanceof AuthBootstrapperInterface
             ? $context->authBootstrapper
             : null;
 
@@ -65,14 +69,10 @@ final class AuthorizationListener implements PipelineListenerInterface
                 ? AuthenticationMode::BestEffort
                 : AuthenticationMode::Mandatory;
 
-            $authBootstrapper->handle($context->requestDto, $mode);
-            $context->authResult = AuthManager::getInstance()->getLastResult();
+            $context->authResult = $authBootstrapper->handle($context->requestDto, $mode);
         }
 
-        $authManager = AuthManager::getInstance();
-        $subject = $authManager->isGuest()
-            ? new GuestSubject()
-            : new AuthenticatedSubject($authManager->getUser()?->getId() ?? '');
+        $subject = $this->resolveSubject();
 
         if ($this->authorizer === null) {
             // No authorizer registered — fall back to simple public/protected check.
@@ -95,6 +95,19 @@ final class AuthorizationListener implements PipelineListenerInterface
         }
 
         throw new AccessDeniedException($decision->message);
+    }
+
+    /**
+     * Resolve the pipeline subject from the injected AuthContextInterface.
+     * Falls back to a guest subject when no auth context is wired.
+     */
+    private function resolveSubject(): AuthenticatedSubject|GuestSubject
+    {
+        if ($this->authContext === null || $this->authContext->isGuest()) {
+            return new GuestSubject();
+        }
+
+        return new AuthenticatedSubject($this->authContext->getUser()?->getId() ?? '');
     }
 
     private function emitDenied(
