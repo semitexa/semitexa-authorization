@@ -72,7 +72,7 @@ final class AuthorizationListener implements PipelineListenerInterface
             $context->authResult = $authBootstrapper->handle($context->requestDto, $mode);
         }
 
-        $subject = $this->resolveSubject();
+        $subject = $this->resolveSubject($context);
 
         if ($this->authorizer === null) {
             // No authorizer registered — fall back to simple public/protected check.
@@ -101,13 +101,21 @@ final class AuthorizationListener implements PipelineListenerInterface
      * Resolve the pipeline subject from the injected AuthContextInterface.
      * Falls back to a guest subject when no auth context is wired.
      */
-    private function resolveSubject(): AuthenticatedSubject|GuestSubject
+    private function resolveSubject(RequestPipelineContext $context): AuthenticatedSubject|GuestSubject
     {
-        if ($this->authContext === null || $this->authContext->isGuest()) {
+        if ($this->authContext !== null && !$this->authContext->isGuest()) {
+            return new AuthenticatedSubject($this->authContext->getUser()?->getId() ?? '');
+        }
+
+        $userId = $context->authResult?->success === true
+            ? ($context->authResult->user?->getId() ?? '')
+            : '';
+
+        if ($userId === '') {
             return new GuestSubject();
         }
 
-        return new AuthenticatedSubject($this->authContext->getUser()?->getId() ?? '');
+        return new AuthenticatedSubject($userId);
     }
 
     private function emitDenied(
