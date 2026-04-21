@@ -58,7 +58,7 @@ final class PreHydrationAuthGate implements PreHydrationAuthGateInterface
             return;
         }
 
-        if ($this->authContext !== null && !$this->authContext->isGuest() && $this->authContext->getUser() !== null) {
+        if ($this->authContext !== null && !$this->authContext->isGuest()) {
             return;
         }
 
