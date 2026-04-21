@@ -7,7 +7,9 @@ namespace Semitexa\Authorization\Pipeline;
 use Semitexa\Authorization\Policy\PayloadAccessPolicyResolver;
 use Semitexa\Core\Attribute\SatisfiesServiceContract;
 use Semitexa\Core\Auth\AuthBootstrapperInterface;
+use Semitexa\Core\Auth\AuthContextInterface;
 use Semitexa\Core\Auth\AuthenticationMode;
+use Semitexa\Core\Attribute\InjectAsMutable;
 use Semitexa\Core\Pipeline\Exception\AuthenticationRequiredException;
 use Semitexa\Core\Pipeline\PreHydrationAuthGateInterface;
 use Semitexa\Core\Request;
@@ -28,6 +30,9 @@ use Semitexa\Core\Request;
 #[SatisfiesServiceContract(of: PreHydrationAuthGateInterface::class)]
 final class PreHydrationAuthGate implements PreHydrationAuthGateInterface
 {
+    #[InjectAsMutable]
+    protected ?AuthContextInterface $authContext = null;
+
     public function gate(object $barePayload, Request $request, ?AuthBootstrapperInterface $authBootstrapper): void
     {
         $resolver = new PayloadAccessPolicyResolver();
@@ -49,8 +54,14 @@ final class PreHydrationAuthGate implements PreHydrationAuthGateInterface
 
         $result = $authBootstrapper->handle($barePayload, AuthenticationMode::Mandatory);
 
-        if ($result === null || $result->success !== true || $result->user === null) {
-            throw new AuthenticationRequiredException('Authentication required');
+        if ($result?->success === true && $result->user !== null) {
+            return;
         }
+
+        if ($this->authContext !== null && !$this->authContext->isGuest() && $this->authContext->getUser() !== null) {
+            return;
+        }
+
+        throw new AuthenticationRequiredException('Authentication required');
     }
 }
