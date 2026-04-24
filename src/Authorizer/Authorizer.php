@@ -15,7 +15,7 @@ use Semitexa\Core\Authorization\SubjectInterface;
 final class Authorizer implements AuthorizerInterface
 {
     #[InjectAsReadonly]
-    protected ?SubjectGrantResolverInterface $grantResolver = null;
+    protected SubjectGrantResolverInterface $grantResolver;
 
     public function authorize(SubjectInterface $subject, AccessPolicy $policy): AccessDecision
     {
@@ -36,7 +36,9 @@ final class Authorizer implements AuthorizerInterface
             return AccessDecision::allow();
         }
 
-        $grants = $this->grantResolver?->resolve($subject);
+        $grants = isset($this->grantResolver)
+            ? $this->grantResolver->resolve($subject)
+            : null;
 
         // Step 3: capability checks (coarse-grained, fast)
         foreach ($policy->requiredCapabilities as $capability) {
