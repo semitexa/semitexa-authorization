@@ -9,6 +9,7 @@ use Semitexa\Core\Attribute\SatisfiesServiceContract;
 use Semitexa\Core\Auth\AuthBootstrapperInterface;
 use Semitexa\Core\Auth\AuthContextInterface;
 use Semitexa\Core\Auth\AuthenticationMode;
+use Semitexa\Core\Attribute\ExecutionScoped;
 use Semitexa\Core\Attribute\InjectAsMutable;
 use Semitexa\Core\Pipeline\Exception\AuthenticationRequiredException;
 use Semitexa\Core\Pipeline\PreHydrationAuthGateInterface;
@@ -28,6 +29,7 @@ use Semitexa\Core\Request;
  * capabilities) after hydration.
  */
 #[SatisfiesServiceContract(of: PreHydrationAuthGateInterface::class)]
+#[ExecutionScoped]
 final class PreHydrationAuthGate implements PreHydrationAuthGateInterface
 {
     #[InjectAsMutable]
