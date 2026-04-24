@@ -25,7 +25,7 @@ use Semitexa\Core\Log\LoggerInterface;
 final class AuthorizationAuditListener
 {
     #[InjectAsReadonly]
-    protected ?LoggerInterface $logger = null;
+    protected LoggerInterface $logger;
 
     public function handle(AuthorizationDenied $event): void
     {
@@ -37,7 +37,7 @@ final class AuthorizationAuditListener
             'request_id' => $event->requestId ?? 'n/a',
         ];
 
-        if ($this->logger !== null) {
+        if (isset($this->logger)) {
             $this->logger->notice('Authorization denied', $context);
             return;
         }

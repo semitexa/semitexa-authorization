@@ -31,7 +31,7 @@ use Semitexa\Core\Request;
 final class PreHydrationAuthGate implements PreHydrationAuthGateInterface
 {
     #[InjectAsMutable]
-    protected ?AuthContextInterface $authContext = null;
+    protected AuthContextInterface $authContext;
 
     public function gate(object $barePayload, Request $request, ?AuthBootstrapperInterface $authBootstrapper): void
     {
@@ -58,7 +58,7 @@ final class PreHydrationAuthGate implements PreHydrationAuthGateInterface
             return;
         }
 
-        if ($this->authContext !== null && !$this->authContext->isGuest()) {
+        if (isset($this->authContext) && !$this->authContext->isGuest()) {
             return;
         }
 

@@ -38,13 +38,13 @@ use Semitexa\Core\Pipeline\RequestPipelineContext;
 final class AuthorizationListener implements PipelineListenerInterface
 {
     #[InjectAsReadonly]
-    protected ?AuthorizerInterface $authorizer = null;
+    protected AuthorizerInterface $authorizer;
 
     #[InjectAsReadonly]
-    protected ?EventDispatcherInterface $events = null;
+    protected EventDispatcherInterface $events;
 
     #[InjectAsMutable]
-    protected ?AuthContextInterface $authContext = null;
+    protected AuthContextInterface $authContext;
 
     public function handle(RequestPipelineContext $context): void
     {
@@ -74,7 +74,7 @@ final class AuthorizationListener implements PipelineListenerInterface
 
         $subject = $this->resolveSubject($context);
 
-        if ($this->authorizer === null) {
+        if (!isset($this->authorizer)) {
             // No authorizer registered — fall back to simple public/protected check.
             if (!$policy->isPublic && $subject->isGuest()) {
                 throw new AuthenticationRequiredException('Authentication required');
@@ -103,7 +103,7 @@ final class AuthorizationListener implements PipelineListenerInterface
      */
     private function resolveSubject(RequestPipelineContext $context): AuthenticatedSubject|GuestSubject
     {
-        if ($this->authContext !== null && !$this->authContext->isGuest()) {
+        if (isset($this->authContext) && !$this->authContext->isGuest()) {
             return new AuthenticatedSubject($this->authContext->getUser()?->getId() ?? '');
         }
 
@@ -123,7 +123,7 @@ final class AuthorizationListener implements PipelineListenerInterface
         RequestPipelineContext $context,
         ?string $userId,
     ): void {
-        if ($this->events === null) {
+        if (!isset($this->events)) {
             return;
         }
 

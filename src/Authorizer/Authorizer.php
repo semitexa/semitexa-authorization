@@ -15,7 +15,7 @@ use Semitexa\Core\Authorization\SubjectInterface;
 final class Authorizer implements AuthorizerInterface
 {
     #[InjectAsReadonly]
-    protected ?SubjectGrantResolverInterface $grantResolver = null;
+    protected SubjectGrantResolverInterface $grantResolver;
 
     public function authorize(SubjectInterface $subject, AccessPolicy $policy): AccessDecision
     {
