@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Semitexa\Authorization\Pipeline;
 
-use Semitexa\Authorization\Policy\PayloadAccessPolicyResolver;
+use Semitexa\Authorization\Application\Service\PayloadAccessPolicyResolver;
 use Semitexa\Core\Attribute\SatisfiesServiceContract;
 use Semitexa\Core\Auth\AuthBootstrapperInterface;
 use Semitexa\Core\Auth\AuthContextInterface;

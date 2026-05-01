@@ -2,10 +2,10 @@
 
 declare(strict_types=1);
 
-namespace Semitexa\Authorization\Authorizer;
+namespace Semitexa\Authorization\Domain\Contract;
 
-use Semitexa\Authorization\Decision\AccessDecision;
-use Semitexa\Authorization\Policy\AccessPolicy;
+use Semitexa\Authorization\Domain\Model\AccessDecision;
+use Semitexa\Authorization\Domain\Model\AccessPolicy;
 use Semitexa\Core\Authorization\SubjectInterface;
 
 interface AuthorizerInterface

@@ -2,9 +2,9 @@
 
 declare(strict_types=1);
 
-namespace Semitexa\Authorization\Event;
+namespace Semitexa\Authorization\Domain\Event;
 
-use Semitexa\Authorization\Decision\AccessDecision;
+use Semitexa\Authorization\Domain\Model\AccessDecision;
 
 /**
  * Emitted when an authorization decision denies a request.

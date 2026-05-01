@@ -2,15 +2,15 @@
 
 declare(strict_types=1);
 
-namespace Semitexa\Authorization\Policy;
+namespace Semitexa\Authorization\Domain\Contract;
 
-use Semitexa\Authorization\Capability\Capability;
+use Semitexa\Authorization\Domain\Contract\CapabilityInterface;
 
 interface PayloadAccessPolicyResolverInterface
 {
     public function isPublic(object $payload): bool;
 
-    /** @return list<Capability> */
+    /** @return list<CapabilityInterface> */
     public function requiredCapabilities(object $payload): array;
 
     /** @return list<string> */

@@ -4,12 +4,12 @@ declare(strict_types=1);
 
 namespace Semitexa\Authorization\Pipeline;
 
-use Semitexa\Authorization\Authorizer\AuthorizerInterface;
-use Semitexa\Authorization\Decision\DenyReason;
-use Semitexa\Authorization\Event\AuthorizationDenied;
-use Semitexa\Authorization\Policy\PayloadAccessPolicyResolver;
-use Semitexa\Authorization\Subject\AuthenticatedSubject;
-use Semitexa\Authorization\Subject\GuestSubject;
+use Semitexa\Authorization\Domain\Contract\AuthorizerInterface;
+use Semitexa\Authorization\Domain\Enum\DenyReason;
+use Semitexa\Authorization\Domain\Event\AuthorizationDenied;
+use Semitexa\Authorization\Application\Service\PayloadAccessPolicyResolver;
+use Semitexa\Authorization\Domain\Model\AuthenticatedSubject;
+use Semitexa\Authorization\Domain\Model\GuestSubject;
 use Semitexa\Core\Attribute\AsPipelineListener;
 use Semitexa\Core\Attribute\InjectAsMutable;
 use Semitexa\Core\Attribute\InjectAsReadonly;
@@ -54,7 +54,7 @@ final class AuthorizationListener implements PipelineListenerInterface
         // This is a boot-time invariant enforced on the first request per payload class.
         $resolver->assertValidMetadata($context->requestDto);
 
-        $policy = new \Semitexa\Authorization\Policy\AccessPolicy(
+        $policy = new \Semitexa\Authorization\Domain\Model\AccessPolicy(
             isPublic: $resolver->isPublic($context->requestDto),
             requiredCapabilities: $resolver->requiredCapabilities($context->requestDto),
             requiredPermissions: $resolver->requiredPermissions($context->requestDto),
@@ -119,7 +119,7 @@ final class AuthorizationListener implements PipelineListenerInterface
     }
 
     private function emitDenied(
-        \Semitexa\Authorization\Decision\AccessDecision $decision,
+        \Semitexa\Authorization\Domain\Model\AccessDecision $decision,
         RequestPipelineContext $context,
         ?string $userId,
     ): void {

@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace Semitexa\Authorization\Subject;
+namespace Semitexa\Authorization\Domain\Model;
 
 use Semitexa\Core\Authorization\SubjectInterface;
 
