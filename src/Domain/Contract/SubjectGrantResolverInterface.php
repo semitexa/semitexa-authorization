@@ -2,9 +2,9 @@
 
 declare(strict_types=1);
 
-namespace Semitexa\Authorization\Authorizer;
+namespace Semitexa\Authorization\Domain\Contract;
 
-use Semitexa\Authorization\Grant\SubjectGrantSet;
+use Semitexa\Authorization\Domain\Model\SubjectGrantSet;
 use Semitexa\Core\Authorization\SubjectInterface;
 
 /**

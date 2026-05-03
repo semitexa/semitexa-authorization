@@ -2,11 +2,15 @@
 
 declare(strict_types=1);
 
-namespace Semitexa\Authorization\Authorizer;
+namespace Semitexa\Authorization\Application\Service;
 
-use Semitexa\Authorization\Decision\AccessDecision;
-use Semitexa\Authorization\Decision\DenyReason;
-use Semitexa\Authorization\Policy\AccessPolicy;
+use Semitexa\Authorization\Domain\Contract\SubjectGrantResolverInterface;
+
+use Semitexa\Authorization\Domain\Contract\AuthorizerInterface;
+
+use Semitexa\Authorization\Domain\Model\AccessDecision;
+use Semitexa\Authorization\Domain\Enum\DenyReason;
+use Semitexa\Authorization\Domain\Model\AccessPolicy;
 use Semitexa\Core\Attribute\InjectAsReadonly;
 use Semitexa\Core\Attribute\SatisfiesServiceContract;
 use Semitexa\Core\Authorization\SubjectInterface;

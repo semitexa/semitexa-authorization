@@ -2,12 +2,16 @@
 
 declare(strict_types=1);
 
-namespace Semitexa\Authorization\Policy;
+namespace Semitexa\Authorization\Application\Service;
+
+use Semitexa\Authorization\Domain\Model\AccessPolicy;
+
+use Semitexa\Authorization\Domain\Contract\PayloadAccessPolicyResolverInterface;
 
 use Semitexa\Authorization\Attribute\PublicEndpoint;
 use Semitexa\Authorization\Attribute\RequiresCapability;
 use Semitexa\Authorization\Attribute\RequiresPermission;
-use Semitexa\Authorization\Capability\Capability;
+use Semitexa\Authorization\Domain\Contract\CapabilityInterface;
 
 final class PayloadAccessPolicyResolver implements PayloadAccessPolicyResolverInterface
 {
@@ -19,7 +23,7 @@ final class PayloadAccessPolicyResolver implements PayloadAccessPolicyResolverIn
         return $this->resolve($payload)->isPublic;
     }
 
-    /** @return list<Capability> */
+    /** @return list<CapabilityInterface> */
     public function requiredCapabilities(object $payload): array
     {
         return $this->resolve($payload)->requiredCapabilities;

@@ -2,7 +2,9 @@
 
 declare(strict_types=1);
 
-namespace Semitexa\Authorization\Decision;
+namespace Semitexa\Authorization\Domain\Model;
+
+use Semitexa\Authorization\Domain\Enum\DenyReason;
 
 final readonly class AccessDecision
 {

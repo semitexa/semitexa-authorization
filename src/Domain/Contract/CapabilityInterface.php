@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace Semitexa\Authorization\Capability;
+namespace Semitexa\Authorization\Domain\Contract;
 
 /**
  * Marker interface for capability enums.
@@ -13,14 +13,14 @@ namespace Semitexa\Authorization\Capability;
  *
  * Example:
  *
- *   enum AdminCapability: string implements Capability {
+ *   enum AdminCapability: string implements CapabilityInterface {
  *       case Access = 'admin.access';
  *       case Settings = 'admin.settings';
  *   }
  *
  * The bitmask storage model is internal to semitexa-rbac.
- * The public boundary remains Capability enum values.
+ * The public boundary remains capability enum values.
  */
-interface Capability
+interface CapabilityInterface
 {
 }

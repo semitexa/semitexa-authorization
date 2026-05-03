@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Semitexa\Authorization\Pipeline;
 
-use Semitexa\Authorization\Event\AuthorizationDenied;
+use Semitexa\Authorization\Domain\Event\AuthorizationDenied;
 use Semitexa\Core\Attribute\AsEventListener;
 use Semitexa\Core\Attribute\InjectAsReadonly;
 use Semitexa\Core\Log\FallbackErrorLogger;

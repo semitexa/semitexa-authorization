@@ -2,9 +2,9 @@
 
 declare(strict_types=1);
 
-namespace Semitexa\Authorization\Policy;
+namespace Semitexa\Authorization\Domain\Model;
 
-use Semitexa\Authorization\Capability\Capability;
+use Semitexa\Authorization\Domain\Contract\CapabilityInterface;
 
 /**
  * Resolved access policy for a specific payload.
@@ -14,7 +14,7 @@ use Semitexa\Authorization\Capability\Capability;
 final readonly class AccessPolicy
 {
     /**
-     * @param list<Capability> $requiredCapabilities
+     * @param list<CapabilityInterface> $requiredCapabilities
      * @param list<string>     $requiredPermissions
      */
     public function __construct(

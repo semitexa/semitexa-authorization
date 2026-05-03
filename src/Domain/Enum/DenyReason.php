@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace Semitexa\Authorization\Decision;
+namespace Semitexa\Authorization\Domain\Enum;
 
 enum DenyReason: string
 {

@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace Semitexa\Authorization\Grant;
+namespace Semitexa\Authorization\Domain\Model;
 
 /**
  * Holds the set of slug-based permissions granted to a subject.
