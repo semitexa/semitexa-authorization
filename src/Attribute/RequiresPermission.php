@@ -15,8 +15,10 @@ use Attribute;
  *
  * Permission checks run after capability checks.
  *
- * #[RequiresPermission] always implies an authenticated user must exist.
- * It must not be combined with #[PublicEndpoint].
+ * #[RequiresPermission] always implies an authenticated user must exist and
+ * therefore only applies to #[AsProtectedPayload]. PayloadAccessPolicyResolver
+ * rejects #[RequiresPermission] paired with #[AsPublicPayload] or
+ * #[AsServicePayload] at boot.
  */
 #[Attribute(Attribute::TARGET_CLASS | Attribute::IS_REPEATABLE)]
 final readonly class RequiresPermission

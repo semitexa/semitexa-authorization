@@ -24,7 +24,7 @@ final class Authorizer implements AuthorizerInterface
     public function authorize(SubjectInterface $subject, AccessPolicy $policy): AccessDecision
     {
         // Step 1: public endpoint — allow regardless of authentication state
-        if ($policy->isPublic) {
+        if ($policy->isPublic()) {
             return AccessDecision::allow();
         }
 

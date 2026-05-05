@@ -16,6 +16,8 @@ use Semitexa\Core\Attribute\InjectAsReadonly;
 use Semitexa\Core\Auth\AuthBootstrapperInterface;
 use Semitexa\Core\Auth\AuthContextInterface;
 use Semitexa\Core\Auth\AuthenticationMode;
+use Semitexa\Core\Auth\AuthSubjectType;
+use Semitexa\Core\Auth\PayloadAccessType;
 use Semitexa\Core\Event\EventDispatcherInterface;
 use Semitexa\Core\Pipeline\AuthCheck;
 use Semitexa\Core\Pipeline\Exception\AccessDeniedException;
@@ -55,7 +57,7 @@ final class AuthorizationListener implements PipelineListenerInterface
         $resolver->assertValidMetadata($context->requestDto);
 
         $policy = new \Semitexa\Authorization\Domain\Model\AccessPolicy(
-            isPublic: $resolver->isPublic($context->requestDto),
+            accessType: $resolver->accessType($context->requestDto),
             requiredCapabilities: $resolver->requiredCapabilities($context->requestDto),
             requiredPermissions: $resolver->requiredPermissions($context->requestDto),
         );
@@ -65,18 +67,38 @@ final class AuthorizationListener implements PipelineListenerInterface
             : null;
 
         if ($authBootstrapper !== null && $authBootstrapper->isEnabled()) {
-            $mode = $policy->isPublic
+            $mode = $policy->isPublic()
                 ? AuthenticationMode::BestEffort
                 : AuthenticationMode::Mandatory;
 
             $context->authResult = $authBootstrapper->handle($context->requestDto, $mode);
         }
 
+        // Subject-domain enforcement: a successful auth from the wrong domain
+        // (User token on a Service route, or Service token on a Protected route)
+        // must NOT continue. The pre-hydration gate already rejects these in
+        // most cases, but the listener is the second line of defense and the
+        // only one that runs for routes without a registered gate.
+        $authResult = $context->authResult;
+        if (!$policy->isPublic()
+            && $authResult?->success === true
+            && $authResult->user !== null
+        ) {
+            $subjectType = $authResult->subjectType ?? AuthSubjectType::User;
+            if (!$subjectType->satisfies($policy->accessType)) {
+                throw new AuthenticationRequiredException(
+                    $policy->accessType === PayloadAccessType::Service
+                        ? 'Service authentication required'
+                        : 'User authentication required',
+                );
+            }
+        }
+
         $subject = $this->resolveSubject($context);
 
         if (!isset($this->authorizer)) {
             // No authorizer registered — fall back to simple public/protected check.
-            if (!$policy->isPublic && $subject->isGuest()) {
+            if (!$policy->isPublic() && $subject->isGuest()) {
                 throw new AuthenticationRequiredException('Authentication required');
             }
             return;
@@ -100,11 +122,22 @@ final class AuthorizationListener implements PipelineListenerInterface
     /**
      * Resolve the pipeline subject from the injected AuthContextInterface.
      * Falls back to a guest subject when no auth context is wired.
+     *
+     * Cycle-10: the AuthSubjectType from AuthResult is propagated onto the
+     * AuthenticatedSubject so SubjectGrantResolver can route to the right
+     * provider (User → CapabilityProviderInterface; Service →
+     * ServiceCapabilityProviderInterface) and the RbacDecisionCache key
+     * cannot collide between domains.
      */
     private function resolveSubject(RequestPipelineContext $context): AuthenticatedSubject|GuestSubject
     {
+        $authResultSubjectType = $context->authResult?->subjectType;
+
         if (isset($this->authContext) && !$this->authContext->isGuest()) {
-            return new AuthenticatedSubject($this->authContext->getUser()?->getId() ?? '');
+            return new AuthenticatedSubject(
+                $this->authContext->getUser()?->getId() ?? '',
+                $authResultSubjectType,
+            );
         }
 
         $userId = $context->authResult?->success === true
@@ -115,7 +148,7 @@ final class AuthorizationListener implements PipelineListenerInterface
             return new GuestSubject();
         }
 
-        return new AuthenticatedSubject($userId);
+        return new AuthenticatedSubject($userId, $authResultSubjectType);
     }
 
     private function emitDenied(
