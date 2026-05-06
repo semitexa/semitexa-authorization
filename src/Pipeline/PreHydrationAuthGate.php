@@ -8,6 +8,8 @@ use Semitexa\Authorization\Application\Service\PayloadAccessPolicyResolver;
 use Semitexa\Core\Attribute\SatisfiesServiceContract;
 use Semitexa\Core\Auth\AuthBootstrapperInterface;
 use Semitexa\Core\Auth\AuthContextInterface;
+use Semitexa\Core\Auth\AuthResult;
+use Semitexa\Core\Auth\AuthSubjectType;
 use Semitexa\Core\Auth\AuthenticationMode;
 use Semitexa\Core\Auth\PayloadAccessType;
 use Semitexa\Core\Attribute\ExecutionScoped;
@@ -84,8 +86,8 @@ final class PreHydrationAuthGate implements PreHydrationAuthGateInterface
         // without declaring a subjectType is treated as User domain — the
         // historical default for handlers that predate the subjectType
         // contract.
-        if ($result?->success === true && $result->user !== null) {
-            $subjectType = $result->subjectType ?? \Semitexa\Core\Auth\AuthSubjectType::User;
+        $subjectType = $this->resolveAuthSubjectType($result);
+        if ($subjectType !== null) {
 
             if ($subjectType->satisfies($accessType)) {
                 return;
@@ -120,5 +122,14 @@ final class PreHydrationAuthGate implements PreHydrationAuthGateInterface
             : 'Authentication required';
 
         throw new AuthenticationRequiredException($message);
+    }
+
+    private function resolveAuthSubjectType(?AuthResult $result): ?AuthSubjectType
+    {
+        if (!$result?->success) {
+            return null;
+        }
+
+        return $result->subjectType ?? AuthSubjectType::User;
     }
 }

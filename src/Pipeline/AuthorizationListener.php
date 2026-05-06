@@ -15,6 +15,7 @@ use Semitexa\Core\Attribute\InjectAsMutable;
 use Semitexa\Core\Attribute\InjectAsReadonly;
 use Semitexa\Core\Auth\AuthBootstrapperInterface;
 use Semitexa\Core\Auth\AuthContextInterface;
+use Semitexa\Core\Auth\AuthResult;
 use Semitexa\Core\Auth\AuthenticationMode;
 use Semitexa\Core\Auth\AuthSubjectType;
 use Semitexa\Core\Auth\PayloadAccessType;
@@ -80,18 +81,24 @@ final class AuthorizationListener implements PipelineListenerInterface
         // most cases, but the listener is the second line of defense and the
         // only one that runs for routes without a registered gate.
         $authResult = $context->authResult;
-        if (!$policy->isPublic()
-            && $authResult?->success === true
-            && $authResult->user !== null
+        $subjectType = $this->resolveAuthSubjectType($authResult);
+        if (!$policy->isPublic() && $subjectType !== null && !$subjectType->satisfies($policy->accessType)) {
+            throw new AuthenticationRequiredException(
+                $policy->accessType === PayloadAccessType::Service
+                    ? 'Service authentication required'
+                    : 'User authentication required',
+            );
+        }
+
+        // Service payloads must be authenticated by a service-domain handler.
+        // A session/user principal already present in AuthContext is not enough
+        // when no successful service auth result was produced for this request.
+        if ($policy->accessType === PayloadAccessType::Service
+            && $subjectType === null
+            && isset($this->authContext)
+            && !$this->authContext->isGuest()
         ) {
-            $subjectType = $authResult->subjectType ?? AuthSubjectType::User;
-            if (!$subjectType->satisfies($policy->accessType)) {
-                throw new AuthenticationRequiredException(
-                    $policy->accessType === PayloadAccessType::Service
-                        ? 'Service authentication required'
-                        : 'User authentication required',
-                );
-            }
+            throw new AuthenticationRequiredException('Service authentication required');
         }
 
         $subject = $this->resolveSubject($context);
@@ -131,7 +138,15 @@ final class AuthorizationListener implements PipelineListenerInterface
      */
     private function resolveSubject(RequestPipelineContext $context): AuthenticatedSubject|GuestSubject
     {
-        $authResultSubjectType = $context->authResult?->subjectType;
+        $authResult = $context->authResult;
+        $authResultSubjectType = $this->resolveAuthSubjectType($authResult);
+
+        if ($authResult?->success === true && $authResultSubjectType !== null) {
+            return new AuthenticatedSubject(
+                $authResult->user?->getId() ?? '',
+                $authResultSubjectType,
+            );
+        }
 
         if (isset($this->authContext) && !$this->authContext->isGuest()) {
             return new AuthenticatedSubject(
@@ -149,6 +164,15 @@ final class AuthorizationListener implements PipelineListenerInterface
         }
 
         return new AuthenticatedSubject($userId, $authResultSubjectType);
+    }
+
+    private function resolveAuthSubjectType(?AuthResult $authResult): ?AuthSubjectType
+    {
+        if (!$authResult?->success) {
+            return null;
+        }
+
+        return $authResult->subjectType ?? AuthSubjectType::User;
     }
 
     private function emitDenied(
