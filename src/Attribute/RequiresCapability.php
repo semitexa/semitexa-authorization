@@ -7,6 +7,10 @@ namespace Semitexa\Authorization\Attribute;
 use Attribute;
 use Semitexa\Authorization\Domain\Contract\CapabilityInterface;
 
+// #[RequiresCapability] only applies to #[AsProtectedPayload]; combining it
+// with #[AsPublicPayload] or #[AsServicePayload] is rejected at boot by
+// PayloadAccessPolicyResolver::assertValidMetadata.
+
 /**
  * Requires the authenticated subject to hold a specific capability.
  *
