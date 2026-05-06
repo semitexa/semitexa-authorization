@@ -51,11 +51,6 @@ final class PreHydrationAuthGate implements PreHydrationAuthGateInterface
 
         $accessType = $resolver->accessType($barePayload);
 
-        // Public payloads bypass the gate entirely.
-        if ($accessType === PayloadAccessType::Public) {
-            return;
-        }
-
         // Make the HTTP request available to AuthHandlers BEFORE hydration so
         // header-based handlers (e.g. MachineAuthHandler reading
         // `Authorization: Bearer …`) can authenticate at the gate.
@@ -70,6 +65,11 @@ final class PreHydrationAuthGate implements PreHydrationAuthGateInterface
         CurrentRequestStore::set($request);
         if (method_exists($barePayload, 'setHttpRequest')) {
             $barePayload->setHttpRequest($request);
+        }
+
+        // Public payloads bypass the gate entirely.
+        if ($accessType === PayloadAccessType::Public) {
+            return;
         }
 
         // No bootstrapper wired: fall through to the legacy post-hydration
