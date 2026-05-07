@@ -319,21 +319,31 @@ final class ConcurrentCoroutineIsolationTest extends TestCase
     {
         $observed = ['a' => null, 'b' => null];
         run(function () use (&$observed): void {
+            $ready = new Channel(2);
+            $start = new Channel(2);
             $barrier = new Channel(2);
-            Coroutine::create(function () use (&$observed, $barrier): void {
+            Coroutine::create(function () use (&$observed, $ready, $start, $barrier): void {
+                $ready->push(1);
+                $start->pop();
                 $app = new Application();
                 $req = $this->makeRequest('/playground', ['X-Smoke-Probe' => 'a']);
                 $resp = $app->handleRequest($req);
                 $observed['a'] = $resp->getStatusCode();
                 $barrier->push(1);
             });
-            Coroutine::create(function () use (&$observed, $barrier): void {
+            Coroutine::create(function () use (&$observed, $ready, $start, $barrier): void {
+                $ready->push(1);
+                $start->pop();
                 $app = new Application();
                 $req = $this->makeRequest('/playground', ['X-Smoke-Probe' => 'b']);
                 $resp = $app->handleRequest($req);
                 $observed['b'] = $resp->getStatusCode();
                 $barrier->push(1);
             });
+            $ready->pop();
+            $ready->pop();
+            $start->push(1);
+            $start->push(1);
             $barrier->pop();
             $barrier->pop();
         });
@@ -348,8 +358,12 @@ final class ConcurrentCoroutineIsolationTest extends TestCase
     {
         $observed = ['user' => null, 'guest' => null];
         run(function () use (&$observed): void {
+            $ready = new Channel(2);
+            $start = new Channel(2);
             $barrier = new Channel(2);
-            Coroutine::create(function () use (&$observed, $barrier): void {
+            Coroutine::create(function () use (&$observed, $ready, $start, $barrier): void {
+                $ready->push(1);
+                $start->pop();
                 $app = new Application();
                 $req = $this->makeRequest(
                     '/auth-demo/runtime/protected',
@@ -359,13 +373,19 @@ final class ConcurrentCoroutineIsolationTest extends TestCase
                 $observed['user'] = $resp->getStatusCode();
                 $barrier->push(1);
             });
-            Coroutine::create(function () use (&$observed, $barrier): void {
+            Coroutine::create(function () use (&$observed, $ready, $start, $barrier): void {
+                $ready->push(1);
+                $start->pop();
                 $app = new Application();
                 $req = $this->makeRequest('/auth-demo/runtime/protected'); // no auth
                 $resp = $app->handleRequest($req);
                 $observed['guest'] = $resp->getStatusCode();
                 $barrier->push(1);
             });
+            $ready->pop();
+            $ready->pop();
+            $start->push(1);
+            $start->push(1);
             $barrier->pop();
             $barrier->pop();
         });
@@ -378,8 +398,12 @@ final class ConcurrentCoroutineIsolationTest extends TestCase
     {
         $observed = ['user_status' => null, 'service_status' => null];
         run(function () use (&$observed): void {
+            $ready = new Channel(2);
+            $start = new Channel(2);
             $barrier = new Channel(2);
-            Coroutine::create(function () use (&$observed, $barrier): void {
+            Coroutine::create(function () use (&$observed, $ready, $start, $barrier): void {
+                $ready->push(1);
+                $start->pop();
                 $app = new Application();
                 $req = $this->makeRequest(
                     '/auth-demo/runtime/protected',
@@ -388,7 +412,9 @@ final class ConcurrentCoroutineIsolationTest extends TestCase
                 $observed['user_status'] = $app->handleRequest($req)->getStatusCode();
                 $barrier->push(1);
             });
-            Coroutine::create(function () use (&$observed, $barrier): void {
+            Coroutine::create(function () use (&$observed, $ready, $start, $barrier): void {
+                $ready->push(1);
+                $start->pop();
                 $app = new Application();
                 // Service token on a USER-protected route → 401 because subject types must match.
                 $req = $this->makeRequest(
@@ -398,6 +424,10 @@ final class ConcurrentCoroutineIsolationTest extends TestCase
                 $observed['service_status'] = $app->handleRequest($req)->getStatusCode();
                 $barrier->push(1);
             });
+            $ready->pop();
+            $ready->pop();
+            $start->push(1);
+            $start->push(1);
             $barrier->pop();
             $barrier->pop();
         });
