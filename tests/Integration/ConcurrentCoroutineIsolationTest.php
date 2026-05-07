@@ -469,10 +469,14 @@ final class ConcurrentCoroutineIsolationTest extends TestCase
         $observed = [];
         run(function () use ($bursts, $perBurst, &$observed): void {
             for ($burst = 0; $burst < $bursts; $burst++) {
+                $ready = new Channel($perBurst);
+                $start = new Channel($perBurst);
                 $barrier = new Channel($perBurst);
                 for ($i = 0; $i < $perBurst; $i++) {
                     $tag = "b{$burst}-c{$i}";
-                    Coroutine::create(function () use ($tag, $barrier, &$observed): void {
+                    Coroutine::create(function () use ($tag, $ready, $start, $barrier, &$observed): void {
+                        $ready->push(1);
+                        $start->pop();
                         $app = new Application();
                         $req = $this->makeRequest(
                             '/auth-demo/runtime/protected',
@@ -481,6 +485,12 @@ final class ConcurrentCoroutineIsolationTest extends TestCase
                         $observed[$tag] = $app->handleRequest($req)->getStatusCode();
                         $barrier->push(1);
                     });
+                }
+                for ($i = 0; $i < $perBurst; $i++) {
+                    $ready->pop();
+                }
+                for ($i = 0; $i < $perBurst; $i++) {
+                    $start->push(1);
                 }
                 for ($i = 0; $i < $perBurst; $i++) {
                     $barrier->pop();
