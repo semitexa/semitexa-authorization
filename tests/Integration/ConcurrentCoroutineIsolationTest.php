@@ -67,10 +67,29 @@ use function Swoole\Coroutine\run;
 #[PreserveGlobalState(false)]
 final class ConcurrentCoroutineIsolationTest extends TestCase
 {
+    /** @var list<class-string> */
+    private const OPTIONAL_RUNTIME_CLASSES = [
+        LocaleContextStore::class,
+        AuthDemoStubAuthHandler::class,
+        AuthDemoUser::class,
+        RbacDecisionCache::class,
+        TenantContext::class,
+        TenantContextStore::class,
+        InMemoryWebhookReplayStore::class,
+    ];
+
     protected function setUp(): void
     {
         if (!class_exists(Coroutine::class, false)) {
             self::markTestSkipped('Swoole\\Coroutine not available — concurrent isolation cannot be verified');
+        }
+        foreach (self::OPTIONAL_RUNTIME_CLASSES as $class) {
+            if (!class_exists($class)) {
+                self::markTestSkipped(sprintf(
+                    'Optional runtime dependency %s is unavailable in this package checkout',
+                    $class,
+                ));
+            }
         }
         $this->wipeAll();
     }
