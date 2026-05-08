@@ -30,6 +30,5 @@
         "permissions",
         "guards",
         "access-control"
-    ],
-    "version": "v1.0.6"
+    ]
 }
