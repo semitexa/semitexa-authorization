@@ -7,6 +7,7 @@ namespace Semitexa\Authorization\Pipeline;
 use Semitexa\Authorization\Domain\Event\AuthorizationDenied;
 use Semitexa\Core\Attribute\AsEventListener;
 use Semitexa\Core\Attribute\InjectAsReadonly;
+use Semitexa\Core\Event\EventExecution;
 use Semitexa\Core\Log\FallbackErrorLogger;
 use Semitexa\Core\Log\LoggerInterface;
 
@@ -21,7 +22,7 @@ use Semitexa\Core\Log\LoggerInterface;
  * This listener runs after AuthorizationListener emits AuthorizationDenied.
  * The denial has already been decided; this listener only observes.
  */
-#[AsEventListener(event: AuthorizationDenied::class)]
+#[AsEventListener(event: AuthorizationDenied::class, execution: EventExecution::Sync)]
 final class AuthorizationAuditListener
 {
     #[InjectAsReadonly]
