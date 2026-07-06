@@ -14,6 +14,7 @@ use Semitexa\Core\Attribute\AsPipelineListener;
 use Semitexa\Core\Attribute\InjectAsMutable;
 use Semitexa\Core\Attribute\InjectAsReadonly;
 use Semitexa\Core\Auth\AuthBootstrapperInterface;
+use Semitexa\Core\Log\FallbackErrorLogger;
 use Semitexa\Core\Auth\AuthContextInterface;
 use Semitexa\Core\Auth\AuthResult;
 use Semitexa\Core\Auth\AuthenticationMode;
@@ -192,8 +193,20 @@ final class AuthorizationListener implements PipelineListenerInterface
                 userId: $userId,
                 requestId: null,
             ));
-        } catch (\Throwable) {
-            // Audit failure must never suppress the denial response.
+        } catch (\Throwable $e) {
+            // The denial response must NEVER be suppressed by an audit
+            // failure — but the failure itself must not be silent either: a
+            // dead audit sink means access denials (including probing) leave
+            // no trail while the security log looks clean. Log the drop
+            // through the always-available fallback so a missing audit trail
+            // is itself detectable, without touching the deny path.
+            FallbackErrorLogger::log('Authorization denial audit-event dispatch failed', [
+                'payload' => $context->requestDto::class,
+                'route' => $context->request->getUri(),
+                'user' => $userId ?? 'guest',
+                'exception' => $e::class,
+                'message' => $e->getMessage(),
+            ]);
         }
     }
 }
