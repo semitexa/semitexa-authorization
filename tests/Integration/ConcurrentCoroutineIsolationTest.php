@@ -18,7 +18,6 @@ use Semitexa\Core\Lifecycle\PerRequestStateRegistry;
 use Semitexa\Core\Lifecycle\TestStateResetRegistry;
 use Semitexa\Core\Request;
 use Semitexa\Core\Support\CoroutineLocal;
-use Semitexa\Core\Tenant\TenantContextStoreInterface;
 use Semitexa\Locale\Context\LocaleContextStore;
 use Semitexa\Modules\AuthDemo\Application\Service\AuthDemoStubAuthHandler;
 use Semitexa\Modules\AuthDemo\Domain\Model\AuthDemoUser;
