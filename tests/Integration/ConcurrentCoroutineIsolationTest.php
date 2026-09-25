@@ -66,11 +66,13 @@ use function Swoole\Coroutine\run;
 #[PreserveGlobalState(false)]
 final class ConcurrentCoroutineIsolationTest extends TestCase
 {
-    /** @var list<class-string> */
+    /**
+     * Packages every test here touches (wipeAll() resets their stores).
+     *
+     * @var list<class-string>
+     */
     private const OPTIONAL_RUNTIME_CLASSES = [
         LocaleContextStore::class,
-        AuthDemoStubAuthHandler::class,
-        AuthDemoUser::class,
         RbacDecisionCache::class,
         TenantContext::class,
         TenantContextStore::class,
@@ -91,6 +93,24 @@ final class ConcurrentCoroutineIsolationTest extends TestCase
             }
         }
         $this->wipeAll();
+    }
+
+    /**
+     * The AuthDemo module is an application module (stub auth handler and
+     * user), not a dependency of this package. Only the tests that log a
+     * principal in need it; skipping every test when it is absent hid the
+     * isolation checks that have nothing to do with it.
+     */
+    private static function requireAuthDemo(): void
+    {
+        foreach ([AuthDemoStubAuthHandler::class, AuthDemoUser::class] as $class) {
+            if (!class_exists($class)) {
+                self::markTestSkipped(sprintf(
+                    'Optional runtime dependency %s is unavailable in this package checkout',
+                    $class,
+                ));
+            }
+        }
     }
 
     protected function tearDown(): void
@@ -142,6 +162,7 @@ final class ConcurrentCoroutineIsolationTest extends TestCase
     #[Test]
     public function auth_context_store_is_coroutine_isolated(): void
     {
+        self::requireAuthDemo();
         $observed = ['a' => null, 'b' => null];
         run(function () use (&$observed): void {
             Coroutine::create(function () use (&$observed): void {
@@ -226,6 +247,7 @@ final class ConcurrentCoroutineIsolationTest extends TestCase
     #[Test]
     public function per_request_registry_resetAll_in_coroutine_B_does_not_clear_coroutine_A(): void
     {
+        self::requireAuthDemo();
         $observed = ['a_user_after_b_reset' => null];
         run(function () use (&$observed): void {
             $cleanupDone = new Channel(1);
@@ -355,6 +377,7 @@ final class ConcurrentCoroutineIsolationTest extends TestCase
     #[Test]
     public function concurrent_user_and_anonymous_dispatches_do_not_leak_user_identity(): void
     {
+        self::requireAuthDemo();
         $observed = ['user' => null, 'guest' => null];
         run(function () use (&$observed): void {
             $ready = new Channel(2);
@@ -395,6 +418,7 @@ final class ConcurrentCoroutineIsolationTest extends TestCase
     #[Test]
     public function concurrent_user_and_service_dispatches_keep_subject_type_isolated(): void
     {
+        self::requireAuthDemo();
         $observed = ['user_status' => null, 'service_status' => null];
         run(function () use (&$observed): void {
             $ready = new Channel(2);
@@ -460,6 +484,7 @@ final class ConcurrentCoroutineIsolationTest extends TestCase
     #[Test]
     public function repeated_concurrent_bursts_remain_isolated(): void
     {
+        self::requireAuthDemo();
         // Sustained-load shape: 8 sequential bursts of 4 concurrent dispatches.
         // If state leakage existed between coroutines or between bursts, it would
         // surface as a non-200 in the user-token slot or a cross-burst id mix-up.
