@@ -109,6 +109,15 @@ final class AuthorizationListener implements PipelineListenerInterface
             if (!$policy->isPublic() && $subject->isGuest()) {
                 throw new AuthenticationRequiredException('Authentication required');
             }
+            // …but only for routes that ask for nothing more. Without an
+            // authorizer nothing can evaluate a capability or permission, and
+            // skipping it would let any signed-in user through a route that
+            // declares #[RequiresPermission]: fail closed instead.
+            if ($policy->requiredCapabilities !== [] || $policy->requiredPermissions !== []) {
+                throw new AccessDeniedException(
+                    'This route requires capabilities or permissions, but no authorizer is registered to evaluate them.',
+                );
+            }
             return;
         }
 
