@@ -7,11 +7,16 @@ namespace Semitexa\Authorization\Tests\Unit\Pipeline;
 use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\TestCase;
 use Semitexa\Authorization\Attribute\AsProtectedPayload;
+use Semitexa\Authorization\Attribute\RequiresCapability;
 use Semitexa\Authorization\Attribute\RequiresPermission;
+use Semitexa\Authorization\Domain\Contract\CapabilityInterface;
+use Semitexa\Authorization\Domain\Enum\DenyReason;
+use Semitexa\Authorization\Domain\Event\AuthorizationDenied;
 use Semitexa\Authorization\Pipeline\AuthorizationListener;
 use Semitexa\Core\Auth\AuthenticatableInterface;
 use Semitexa\Core\Auth\AuthResult;
 use Semitexa\Core\Discovery\DiscoveredRoute;
+use Semitexa\Core\Event\EventDispatcherInterface;
 use Semitexa\Core\Exception\AccessDeniedException;
 use Semitexa\Core\Pipeline\RequestPipelineContext;
 use Semitexa\Core\Request;
@@ -28,6 +33,51 @@ final class AuthorizationListenerWithoutAuthorizerTest extends TestCase
         $this->expectException(AccessDeniedException::class);
 
         (new AuthorizationListener())->handle($this->context(new PermissionGuardedFixturePayload()));
+    }
+
+    #[Test]
+    public function a_capability_route_is_denied_when_nothing_can_evaluate_the_capability(): void
+    {
+        $this->expectException(AccessDeniedException::class);
+
+        (new AuthorizationListener())->handle($this->context(new CapabilityGuardedFixturePayload()));
+    }
+
+    #[Test]
+    public function the_fallback_denial_is_audited_like_any_other(): void
+    {
+        $listener = new AuthorizationListener();
+        $events = new class implements EventDispatcherInterface {
+            /** @var list<object> */
+            public array $dispatched = [];
+
+            public function create(string $eventClass, array $payload): object
+            {
+                throw new \LogicException('not used');
+            }
+
+            public function dispatch(object $event): void
+            {
+                $this->dispatched[] = $event;
+            }
+
+            public function addPostDispatchHook(callable $hook): void
+            {
+            }
+        };
+        (new \ReflectionProperty(AuthorizationListener::class, 'events'))->setValue($listener, $events);
+
+        try {
+            $listener->handle($this->context(new CapabilityGuardedFixturePayload()));
+            self::fail('the capability route must be denied');
+        } catch (AccessDeniedException) {
+        }
+
+        self::assertCount(1, $events->dispatched);
+        $event = $events->dispatched[0];
+        self::assertInstanceOf(AuthorizationDenied::class, $event);
+        self::assertSame(DenyReason::CapabilityRequired, $event->decision->denyReason);
+        self::assertSame(CapabilityGuardedFixturePayload::class, $event->payloadClass);
     }
 
     #[Test]
@@ -63,5 +113,16 @@ final class PermissionGuardedFixturePayload
 
 #[AsProtectedPayload(path: '/fixture/protected', methods: ['GET'])]
 final class ProtectedFixturePayload
+{
+}
+
+enum FixtureCapability: string implements CapabilityInterface
+{
+    case Dangerous = 'fixture.dangerous';
+}
+
+#[AsProtectedPayload(path: '/fixture/capability-guarded', methods: ['GET'])]
+#[RequiresCapability(FixtureCapability::Dangerous)]
+final class CapabilityGuardedFixturePayload
 {
 }

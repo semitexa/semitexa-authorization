@@ -114,9 +114,15 @@ final class AuthorizationListener implements PipelineListenerInterface
             // skipping it would let any signed-in user through a route that
             // declares #[RequiresPermission]: fail closed instead.
             if ($policy->requiredCapabilities !== [] || $policy->requiredPermissions !== []) {
-                throw new AccessDeniedException(
+                $decision = \Semitexa\Authorization\Domain\Model\AccessDecision::denyForbidden(
+                    $policy->requiredCapabilities !== [] ? DenyReason::CapabilityRequired : DenyReason::PermissionRequired,
                     'This route requires capabilities or permissions, but no authorizer is registered to evaluate them.',
                 );
+                // Audited like every other denial; emitDenied() never lets an
+                // audit failure replace the denial itself.
+                $this->emitDenied($decision, $context, $subject->getIdentifier());
+
+                throw new AccessDeniedException($decision->message);
             }
             return;
         }
