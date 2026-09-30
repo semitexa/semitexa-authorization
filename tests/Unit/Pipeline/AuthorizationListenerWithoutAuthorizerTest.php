@@ -9,7 +9,6 @@ use PHPUnit\Framework\TestCase;
 use Semitexa\Authorization\Attribute\AsProtectedPayload;
 use Semitexa\Authorization\Attribute\RequiresCapability;
 use Semitexa\Authorization\Attribute\RequiresPermission;
-use Semitexa\Authorization\Domain\Contract\CapabilityInterface;
 use Semitexa\Authorization\Domain\Enum\DenyReason;
 use Semitexa\Authorization\Domain\Event\AuthorizationDenied;
 use Semitexa\Authorization\Pipeline\AuthorizationListener;
@@ -114,11 +113,6 @@ final class PermissionGuardedFixturePayload
 #[AsProtectedPayload(path: '/fixture/protected', methods: ['GET'])]
 final class ProtectedFixturePayload
 {
-}
-
-enum FixtureCapability: string implements CapabilityInterface
-{
-    case Dangerous = 'fixture.dangerous';
 }
 
 #[AsProtectedPayload(path: '/fixture/capability-guarded', methods: ['GET'])]
