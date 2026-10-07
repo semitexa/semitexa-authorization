@@ -13,6 +13,7 @@ use Semitexa\Authorization\Domain\Contract\CapabilityInterface;
 use Semitexa\Authorization\Domain\Contract\PayloadAccessPolicyResolverInterface;
 use Semitexa\Authorization\Domain\Model\AccessPolicy;
 use Semitexa\Core\Attribute\AbstractPayloadRoute;
+use Semitexa\Core\Contract\DeclaresRequiredPermissionsInterface;
 use Semitexa\Core\Attribute\AsPublicPayload;
 use Semitexa\Core\Auth\PayloadAccessType;
 
@@ -216,6 +217,11 @@ final class PayloadAccessPolicyResolver implements PayloadAccessPolicyResolverIn
 
         /** @var AbstractPayloadRoute $accessAttr */
         $accessAttr = $accessAttributes[0]['instance'];
+        // A route attribute may state its own required permissions (a CRUD
+        // screen's `{permission}.read`); they add to #[RequiresPermission].
+        if ($accessAttr instanceof DeclaresRequiredPermissionsInterface) {
+            $permissions = array_values(array_unique([...$permissions, ...$accessAttr->requiredPermissions($class)]));
+        }
 
         $policy = new AccessPolicy(
             accessType: $accessAttr->getAccessType(),
