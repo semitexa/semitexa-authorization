@@ -5,7 +5,7 @@
     "license": "MIT",
     "require": {
         "php": "^8.4",
-        "semitexa/core": "*",
+        "semitexa/core": ">=2026.10.08.0620 || dev-master",
         "semitexa/auth": "*"
     },
     "autoload": {
@@ -24,7 +24,7 @@
         },
         "semitexa": {
             "floors": {
-                "semitexa/core": "next"
+                "semitexa/core": "2026.10.08.0620"
             }
         }
     },
