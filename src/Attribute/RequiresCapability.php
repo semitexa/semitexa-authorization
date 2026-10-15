@@ -7,8 +7,9 @@ namespace Semitexa\Authorization\Attribute;
 use Attribute;
 use Semitexa\Authorization\Domain\Contract\CapabilityInterface;
 
-// #[RequiresCapability] only applies to #[AsProtectedPayload]; combining it
-// with #[AsPublicPayload] or #[AsServicePayload] is rejected by
+// #[RequiresCapability] applies to #[AsProtectedPayload] (checked against the
+// user's capabilities) and #[AsServicePayload] (the service's grants; services
+// have no permissions). Combining it with #[AsPublicPayload] is rejected by
 // PayloadAccessPolicyResolver::assertValidMetadata on the route's first
 // request (PreHydrationAuthGate), not when the server boots.
 
