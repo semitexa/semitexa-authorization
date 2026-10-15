@@ -32,10 +32,13 @@ interface PayloadAccessPolicyResolverInterface
      *   - the payload declares no payload-access attribute
      *   - the payload declares more than one access attribute
      *   - #[AsPublicPayload]  is combined with #[RequiresCapability]/#[RequiresPermission]
-     *   - #[AsServicePayload] is combined with #[RequiresCapability]/#[RequiresPermission]
+     *   - #[AsServicePayload] is combined with #[RequiresPermission] (services have
+     *     no permissions; #[RequiresCapability] is how a service route is gated)
      * Conflicts are detected across the full class hierarchy.
      *
-     * This is a boot-time invariant and must never be deferred to first-request time.
+     * Called by PreHydrationAuthGate (and AuthorizationListener) on the first
+     * request to each payload class, before the handler runs; the result is
+     * cached per class. A route nobody requests is not validated.
      */
     public function assertValidMetadata(object $payload): void;
 }
