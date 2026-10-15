@@ -36,9 +36,10 @@ interface PayloadAccessPolicyResolverInterface
      *     no permissions; #[RequiresCapability] is how a service route is gated)
      * Conflicts are detected across the full class hierarchy.
      *
-     * Called by PreHydrationAuthGate (and AuthorizationListener) on the first
-     * request to each payload class, before the handler runs; the result is
-     * cached per class. A route nobody requests is not validated.
+     * Called by PreHydrationAuthGate (and AuthorizationListener) on every
+     * request, before the handler runs. The resolved policy is cached per
+     * class, the combination checks are not, so an invalid payload fails each
+     * request to it. A route nobody requests is never validated.
      */
     public function assertValidMetadata(object $payload): void;
 }
