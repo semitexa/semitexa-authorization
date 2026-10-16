@@ -19,7 +19,8 @@ use Attribute;
  * therefore only applies to #[AsProtectedPayload]. PayloadAccessPolicyResolver
  * rejects #[RequiresPermission] paired with #[AsPublicPayload] or
  * #[AsServicePayload] on the route's first request (PreHydrationAuthGate),
- * not when the server boots.
+ * not when the server boots; `bin/semitexa lint:access` (run by ai:verify)
+ * finds it for every route before that.
  */
 #[Attribute(Attribute::TARGET_CLASS | Attribute::IS_REPEATABLE)]
 final readonly class RequiresPermission
