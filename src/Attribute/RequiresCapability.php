@@ -11,7 +11,8 @@ use Semitexa\Authorization\Domain\Contract\CapabilityInterface;
 // user's capabilities) and #[AsServicePayload] (the service's grants; services
 // have no permissions). Combining it with #[AsPublicPayload] is rejected by
 // PayloadAccessPolicyResolver::assertValidMetadata on the route's first
-// request (PreHydrationAuthGate), not when the server boots.
+// request (PreHydrationAuthGate), not when the server boots; lint:access
+// (run by ai:verify) finds it for every route before that.
 
 /**
  * Requires the authenticated subject to hold a specific capability.

@@ -20,6 +20,7 @@ Depends on `semitexa/core` and `semitexa/auth`. Used by `semitexa/rbac` and plat
 - `#[RequiresCapability]` and `#[RequiresPermission]` attributes
 - `PayloadAccessPolicyResolver` merging policies from class hierarchy
 - `AuthorizationListener` guarding handler execution with 403 on failure
+- `bin/semitexa lint:access` checking the access attributes of every route payload at once (`ai:verify` runs it); at runtime a route's metadata is checked on its first request
 - `AuthenticatedSubject` and `GuestSubject` types
 - Extensible via `SubjectGrantResolverInterface` (implemented by RBAC)
 
