@@ -26,8 +26,8 @@ enum DenyReason: string
 
     /**
      * The payload has invalid or contradictory authorization metadata.
-     * This is a developer error — fails at boot-time.
-     * Maps to HTTP 500 / boot failure.
+     * This is a developer error — fails on the route's first request.
+     * Maps to HTTP 500.
      */
     case InvalidPolicyMetadata = 'invalid_policy_metadata';
 }

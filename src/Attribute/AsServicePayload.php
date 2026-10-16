@@ -14,10 +14,12 @@ use Semitexa\Core\Auth\PayloadAccessType;
  * service calls. The endpoint is authenticated by service-level credentials
  * — bearer machine token, signed body, mTLS, etc. — NOT by a user session.
  *
- * MUST NOT be combined with #[RequiresCapability] or #[RequiresPermission];
- * those attributes target user-facing protected endpoints. Service-payload
- * authorization is enforced by the service-auth handler chain (e.g. the
- * MachineAuthHandler in semitexa-api), not by user grant sets.
+ * The service-auth handler chain (e.g. MachineAuthHandler in semitexa-api)
+ * establishes the service principal. To restrict WHICH services may call the
+ * route, add #[RequiresCapability]: it is checked against the service's grants
+ * through ServiceCapabilityProviderInterface. #[RequiresPermission] MUST NOT
+ * be combined with it — permissions are user-domain only — and the pairing is
+ * refused (PayloadAccessPolicyResolver::assertValidMetadata).
  *
  * Distinct from #[AsPublicPayload]: a publicly reachable URL that requires
  * a signature is a service payload, not a public one.

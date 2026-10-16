@@ -32,7 +32,7 @@ use Semitexa\Core\Pipeline\RequestPipelineContext;
  *
  * Responsibilities (orchestration only — no policy semantics inline):
  *   1. Resolve payload access policy.
- *   2. Validate policy metadata (boot-time invariant, fails loudly on bad combos).
+ *   2. Validate policy metadata (fails loudly on bad combos, once per payload class).
  *   3. Invoke AuthBootstrapper in the appropriate mode (Mandatory or BestEffort).
  *   4. Evaluate the resolved subject against the access policy.
  *   5. Emit AuthorizationDenied event on denial (observational only).
@@ -55,7 +55,7 @@ final class AuthorizationListener implements PipelineListenerInterface
         $resolver = new PayloadAccessPolicyResolver();
 
         // Validate metadata — fails loudly on contradictory attribute combinations.
-        // This is a boot-time invariant enforced on the first request per payload class.
+        // Enforced on the first request per payload class (cached), not at boot.
         $resolver->assertValidMetadata($context->requestDto);
 
         $policy = new \Semitexa\Authorization\Domain\Model\AccessPolicy(

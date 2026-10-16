@@ -18,7 +18,8 @@ use Attribute;
  * #[RequiresPermission] always implies an authenticated user must exist and
  * therefore only applies to #[AsProtectedPayload]. PayloadAccessPolicyResolver
  * rejects #[RequiresPermission] paired with #[AsPublicPayload] or
- * #[AsServicePayload] at boot.
+ * #[AsServicePayload] on the route's first request (PreHydrationAuthGate),
+ * not when the server boots.
  */
 #[Attribute(Attribute::TARGET_CLASS | Attribute::IS_REPEATABLE)]
 final readonly class RequiresPermission
