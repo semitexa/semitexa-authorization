@@ -45,20 +45,26 @@ final class LintAccessCommand extends BaseCommand
     {
         $report = (new PayloadAccessAudit())->audit($this->attributeDiscovery->getRoutes());
         $violations = $report['violations'];
+        // No route to check means discovery failed, not that every route is fine.
+        $ok = $violations === [] && $report['checked'] > 0;
 
         if ((bool) $input->getOption('json')) {
             $output->writeln(json_encode([
                 'artifact' => 'semitexa-authorization.lint-access/v1',
-                'ok' => $violations === [],
+                'ok' => $ok,
                 'checked' => $report['checked'],
                 'violations' => $violations,
             ], JSON_UNESCAPED_SLASHES | JSON_PRETTY_PRINT | JSON_THROW_ON_ERROR), OutputInterface::OUTPUT_RAW);
-            return $violations === [] ? Command::SUCCESS : Command::FAILURE;
+            return $ok ? Command::SUCCESS : Command::FAILURE;
         }
 
         foreach ($violations as $v) {
             $output->writeln(sprintf('<error>%s</error> %s', $v['path'], $v['class']));
             $output->writeln('  ' . $v['reason']);
+        }
+        if ($report['checked'] === 0) {
+            $output->writeln('lint:access → no route was discovered, so nothing was checked.');
+            return Command::FAILURE;
         }
         if ($violations === []) {
             $output->writeln(sprintf('lint:access → %d route payload(s), every one declares valid access metadata.', $report['checked']));
