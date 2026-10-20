@@ -41,6 +41,11 @@ final class PreHydrationAuthGate implements PreHydrationAuthGateInterface
 
     public function gate(object $barePayload, Request $request, ?AuthBootstrapperInterface $authBootstrapper): void
     {
+        // Nothing from an earlier gate in this coroutine survives into this
+        // request, whichever way this one leaves (a stream re-runs in one
+        // coroutine; an exception can end a tick before the listener took it).
+        GateAuthResult::forget();
+
         $resolver = new PayloadAccessPolicyResolver();
 
         // Validate metadata once per class (cached). Invalid attribute combos
@@ -90,6 +95,7 @@ final class PreHydrationAuthGate implements PreHydrationAuthGateInterface
         if ($subjectType !== null) {
 
             if ($subjectType->satisfies($accessType)) {
+                GateAuthResult::remember($request, $result);
                 return;
             }
 
