@@ -15,6 +15,7 @@ use Semitexa\Core\Auth\AuthBootstrapperInterface;
 use Semitexa\Core\Auth\AuthenticatableInterface;
 use Semitexa\Core\Auth\AuthenticationMode;
 use Semitexa\Core\Auth\AuthResult;
+use Semitexa\Core\Auth\AuthSubjectType;
 use Semitexa\Core\Discovery\DiscoveredRoute;
 use Semitexa\Core\Pipeline\RequestPipelineContext;
 use Semitexa\Core\Request;
@@ -27,9 +28,28 @@ use Semitexa\Core\Support\CoroutineLocal;
  */
 final class AuthenticatedOnceTest extends TestCase
 {
+    /** @var array<string, mixed> what other tests left in the CLI store */
+    private array $saved = [];
+
+    /**
+     * The gate writes CurrentRequestStore and its handoff into the CLI store:
+     * kept from before the test and put back after it, so neither this class's
+     * leftovers nor its clean start reach another test.
+     */
     protected function setUp(): void
     {
+        $this->saved = self::cliStore()->getValue();
         CoroutineLocal::resetCliStore();
+    }
+
+    protected function tearDown(): void
+    {
+        self::cliStore()->setValue(null, $this->saved);
+    }
+
+    private static function cliStore(): \ReflectionProperty
+    {
+        return new \ReflectionProperty(CoroutineLocal::class, 'cliStore');
     }
 
     #[Test]
@@ -48,7 +68,11 @@ final class AuthenticatedOnceTest extends TestCase
         (new AuthorizationListener())->handle($context);
 
         self::assertSame(1, $auth->calls);
-        self::assertTrue($context->authResult?->success);
+        self::assertSame(
+            [true, 'svc-1', AuthSubjectType::Service],
+            [$context->authResult?->success, $context->authResult?->user?->getId(), $context->authResult?->subjectType],
+            'the gate\'s principal, as a service',
+        );
     }
 
     #[Test]
