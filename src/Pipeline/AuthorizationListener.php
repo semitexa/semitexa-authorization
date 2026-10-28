@@ -73,7 +73,11 @@ final class AuthorizationListener implements PipelineListenerInterface
                 ? AuthenticationMode::BestEffort
                 : AuthenticationMode::Mandatory;
 
-            $context->authResult = $authBootstrapper->handle($context->requestDto, $mode);
+            // The gate authenticated this request already when the route is
+            // not public; running the handlers again cost a second password
+            // check and recorded a machine credential's use twice.
+            $context->authResult = GateAuthResult::takeFor($context->request)
+                ?? $authBootstrapper->handle($context->requestDto, $mode);
         }
 
         // Subject-domain enforcement: a successful auth from the wrong domain
