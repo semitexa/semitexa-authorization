@@ -23,6 +23,8 @@ use Semitexa\Core\Auth\PayloadAccessType;
  *
  * Distinct from #[AsPublicPayload]: a publicly reachable URL that requires
  * a signature is a service payload, not a public one.
+ *
+ * @api
  */
 #[Attribute(Attribute::TARGET_CLASS)]
 final class AsServicePayload extends AbstractPayloadRoute

@@ -23,6 +23,8 @@ use Semitexa\Authorization\Domain\Contract\CapabilityInterface;
  * every declared capability.
  *
  * CapabilityInterface checks run before slug-based permission checks.
+ *
+ * @api
  */
 #[Attribute(Attribute::TARGET_CLASS | Attribute::IS_REPEATABLE)]
 final readonly class RequiresCapability

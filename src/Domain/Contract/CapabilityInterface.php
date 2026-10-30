@@ -20,6 +20,8 @@ namespace Semitexa\Authorization\Domain\Contract;
  *
  * The bitmask storage model is internal to semitexa-rbac.
  * The public boundary remains capability enum values.
+ *
+ * @api
  */
 interface CapabilityInterface
 {

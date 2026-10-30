@@ -16,6 +16,8 @@ use Semitexa\Core\Auth\PayloadAccessType;
  * For machine-to-machine endpoints (webhook receivers, partner APIs, signed
  * integrations) declare #[AsServicePayload] instead. Service is a separate
  * access class, not a flavor of protected.
+ *
+ * @api
  */
 #[Attribute(Attribute::TARGET_CLASS)]
 final class AsProtectedPayload extends AbstractPayloadRoute
