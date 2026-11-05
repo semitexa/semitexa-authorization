@@ -38,14 +38,16 @@ use Semitexa\Core\Attribute\Capability;
         // Several #[RequiresPermission] on one payload must all hold. It needs #[AsProtectedPayload]:
         // on a public payload it is refused, and bin/semitexa lint:access finds that for every route.
 
-        // Hide what would be refused, in a template:
+        // Hide what would be refused, in a template. can() comes with semitexa/platform-ui:
         {% if can('orders.read') %}<a href="/orders">Orders</a>{% endif %}
 
-        // A form submit or grid action runs outside a guarded route, so it checks by itself:
+        // A form submit or grid action runs outside a guarded route, so it checks by itself.
+        // UiPermissions comes with semitexa/platform-ui too:
         UiPermissions::allows('orders.read');
 
         // Hiding a control is never the check: the route or action behind it still refuses.
-        // Give roles their permissions with bin/semitexa role:grant.
+        // Give roles their permissions with bin/semitexa role:grant. That command comes with
+        // semitexa/platform-user, which this package does not install: require it first.
         USAGE,
 )]
 final class Capabilities
