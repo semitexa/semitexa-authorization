@@ -22,7 +22,7 @@ use Semitexa\Core\Auth\PayloadAccessType;
  */
 #[Capability(
     id: 'authorization.protected-page',
-    summary: 'A page only a signed-in visitor sees: #[AsProtectedPayload] refuses a guest before the payload is hydrated or the handler runs.',
+    summary: 'A page only a signed-in visitor sees: #[AsProtectedPayload] refuses a guest before the handler runs, and with authentication on (semitexa/auth, AUTH_ENABLED not false) before the payload is hydrated.',
     useWhen: 'A page shows, or changes, things that belong to whoever is signed in: a profile, an account, settings, a dashboard.',
     avoidWhen: 'Anyone may see the page; then #[AsPublicPayload], with a reason when it reads who is signed in or sits on a private-sounding path.',
     replaces: [
