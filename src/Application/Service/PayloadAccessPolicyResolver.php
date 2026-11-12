@@ -189,6 +189,7 @@ final class PayloadAccessPolicyResolver implements PayloadAccessPolicyResolverIn
                 $accessAttributes[] = [
                     'name' => $attr->getName(),
                     'instance' => $attr->newInstance(),
+                    'class' => $current->getName(),
                 ];
             }
 
@@ -235,7 +236,7 @@ final class PayloadAccessPolicyResolver implements PayloadAccessPolicyResolverIn
         // A route attribute may state its own required permissions (a CRUD
         // screen's `{permission}.read`); they add to #[RequiresPermission].
         if ($accessAttr instanceof DeclaresRequiredPermissionsInterface) {
-            array_push($permissions, ...$accessAttr->requiredPermissions($class));
+            array_push($permissions, ...$accessAttr->requiredPermissions($accessAttributes[0]['class']));
         }
         $permissions = array_values(array_unique($permissions));
 

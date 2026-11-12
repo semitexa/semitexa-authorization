@@ -8,6 +8,7 @@ use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\TestCase;
 use Semitexa\Authorization\Application\Service\PayloadAccessPolicyResolver;
 use Semitexa\Authorization\Tests\Unit\Service\Fixture\InheritingRouteFixturePayload;
+use Semitexa\Authorization\Tests\Unit\Service\Fixture\InheritingScreenFixturePayload;
 use Semitexa\Authorization\Tests\Unit\Service\Fixture\OverridingScreenFixturePayload;
 use Semitexa\Authorization\Tests\Unit\Service\Fixture\OverridingRouteFixturePayload;
 use Semitexa\Authorization\Tests\Unit\Service\Fixture\TwiceDeclaredRouteFixturePayload;
@@ -28,6 +29,7 @@ final class RouteOverrideAccessTest extends TestCase
 
     protected function setUp(): void
     {
+        parent::setUp();
         $this->cache = (new \ReflectionProperty(PayloadAccessPolicyResolver::class, 'cache'))->getValue();
         PayloadAccessPolicyResolver::clearCache();
     }
@@ -35,6 +37,7 @@ final class RouteOverrideAccessTest extends TestCase
     protected function tearDown(): void
     {
         (new \ReflectionProperty(PayloadAccessPolicyResolver::class, 'cache'))->setValue(null, $this->cache);
+        parent::tearDown();
     }
 
     #[Test]
@@ -68,6 +71,8 @@ final class RouteOverrideAccessTest extends TestCase
 
         self::assertSame(PayloadAccessType::Protected, $resolver->accessType(new InheritingRouteFixturePayload()));
         self::assertSame(['landing.read'], $resolver->requiredPermissions(new InheritingRouteFixturePayload()));
+        // The inherited attribute is asked about the class it sits on, not the subclass.
+        self::assertSame(['users.read', 'declared-on:ScreenRouteFixturePayload'], $resolver->requiredPermissions(new InheritingScreenFixturePayload()));
     }
 
     #[Test]
