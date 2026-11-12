@@ -50,8 +50,8 @@ final class PayloadAccessPolicyResolver implements PayloadAccessPolicyResolverIn
      *
      * Enforced rules:
      *   1. Exactly one #[AsPublicPayload]/#[AsProtectedPayload]/#[AsServicePayload]
-     *      attribute is required (the same instance / one of those subclasses,
-     *      counted across the class hierarchy).
+     *      attribute is required, read from the nearest class in the hierarchy
+     *      that declares one (a route override's own attribute wins).
      *   2. Multiple access attributes on the same payload are rejected.
      *   3. #[AsPublicPayload] cannot be combined with #[RequiresCapability]
      *      or #[RequiresPermission] (public means anonymous — there is no
@@ -166,10 +166,24 @@ final class PayloadAccessPolicyResolver implements PayloadAccessPolicyResolverIn
         $ref = new ReflectionClass($payload);
         $current = $ref;
         while ($current !== false) {
-            // Access attributes: gather from the class hierarchy. Multiple
-            // declarations across the chain still count as multiple — there is
-            // no inheritance override; the contract is "exactly one".
+            // Access attributes: the nearest class that declares one decides, the
+            // way discovery reads the route from the class itself. A route
+            // override (extends + overrides:) has to redeclare its route
+            // attribute, so counting the parent's too made every request to it a
+            // 500 (tk-route-override-chain-access). One class with two is still
+            // refused. Requirements gather over the whole chain, and so do the
+            // permissions an ancestor's route attribute states itself (#[AsCrud]'s
+            // `{permission}.read`): an override takes the access type, not less.
             $found = $current->getAttributes(AbstractPayloadRoute::class, \ReflectionAttribute::IS_INSTANCEOF);
+            if ($accessAttributes !== []) {
+                foreach ($found as $attr) {
+                    $inherited = $attr->newInstance();
+                    if ($inherited instanceof DeclaresRequiredPermissionsInterface) {
+                        array_push($permissions, ...$inherited->requiredPermissions($class));
+                    }
+                }
+                $found = [];
+            }
             foreach ($found as $attr) {
                 $accessAttributes[] = [
                     'name' => $attr->getName(),
@@ -220,8 +234,9 @@ final class PayloadAccessPolicyResolver implements PayloadAccessPolicyResolverIn
         // A route attribute may state its own required permissions (a CRUD
         // screen's `{permission}.read`); they add to #[RequiresPermission].
         if ($accessAttr instanceof DeclaresRequiredPermissionsInterface) {
-            $permissions = array_values(array_unique([...$permissions, ...$accessAttr->requiredPermissions($class)]));
+            array_push($permissions, ...$accessAttr->requiredPermissions($class));
         }
+        $permissions = array_values(array_unique($permissions));
 
         $policy = new AccessPolicy(
             accessType: $accessAttr->getAccessType(),
