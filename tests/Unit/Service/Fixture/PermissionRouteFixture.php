@@ -23,8 +23,9 @@ final class PermissionRouteFixture extends AbstractPayloadRoute implements Decla
         return PayloadAccessType::Protected;
     }
 
+    /** Names the class it was asked about, so a test sees which one the resolver passed. */
     public function requiredPermissions(string $payloadClass): array
     {
-        return [$this->permission . '.read'];
+        return [$this->permission . '.read', 'declared-on:' . (new \ReflectionClass($payloadClass))->getShortName()];
     }
 }

@@ -23,9 +23,18 @@ use Semitexa\Core\Auth\PayloadAccessType;
  */
 final class RouteOverrideAccessTest extends TestCase
 {
+    /** @var array<class-string, mixed> The resolver's process-wide cache as the test found it. */
+    private array $cache = [];
+
+    protected function setUp(): void
+    {
+        $this->cache = (new \ReflectionProperty(PayloadAccessPolicyResolver::class, 'cache'))->getValue();
+        PayloadAccessPolicyResolver::clearCache();
+    }
+
     protected function tearDown(): void
     {
-        PayloadAccessPolicyResolver::clearCache();
+        (new \ReflectionProperty(PayloadAccessPolicyResolver::class, 'cache'))->setValue(null, $this->cache);
     }
 
     #[Test]
@@ -48,7 +57,8 @@ final class RouteOverrideAccessTest extends TestCase
         $override = new OverridingScreenFixturePayload();
 
         self::assertSame(PayloadAccessType::Protected, $resolver->accessType($override));
-        self::assertSame(['users.read'], $resolver->requiredPermissions($override));
+        // Asked about the class the attribute sits on, the screen, not the override (review, authorization#34).
+        self::assertSame(['users.read', 'declared-on:ScreenRouteFixturePayload'], $resolver->requiredPermissions($override));
     }
 
     #[Test]

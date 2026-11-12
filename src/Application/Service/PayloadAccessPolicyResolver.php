@@ -179,7 +179,8 @@ final class PayloadAccessPolicyResolver implements PayloadAccessPolicyResolverIn
                 foreach ($found as $attr) {
                     $inherited = $attr->newInstance();
                     if ($inherited instanceof DeclaresRequiredPermissionsInterface) {
-                        array_push($permissions, ...$inherited->requiredPermissions($class));
+                        // The class the attribute sits on, as the contract says (review, authorization#34).
+                        array_push($permissions, ...$inherited->requiredPermissions($current->getName()));
                     }
                 }
                 $found = [];
